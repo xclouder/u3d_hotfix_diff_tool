@@ -1,0 +1,17 @@
+{
+	"from" : "svn://172.16.1.9/ezfun/xgame2/client/trunk",
+	"fromVer" : 234174,
+	"to" : "svn://172.16.1.9/ezfun/xgame2/client/branchs/20170818/XGame2",
+	"archivePath" : "~/desktop/hotfix/",
+	"modules" :
+	[
+		{
+			"name":"Lua",
+			"relativePath":"Assets/StreamingAssets/Lua"
+		},
+		{
+			"name":"Table",
+			"relativePath":"Assets/StreamingAssets/Table"
+		}
+	]
+}
