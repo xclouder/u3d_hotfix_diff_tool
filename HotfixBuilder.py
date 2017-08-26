@@ -2,7 +2,7 @@
 # @Author: xClouder
 # @Date:   2017-08-26 15:13:19
 # @Last Modified by:   xClouder
-# @Last Modified time: 2017-08-26 18:24:09
+# @Last Modified time: 2017-08-26 18:37:08
 import subprocess
 import json
 
@@ -34,7 +34,7 @@ class SvnDiffWorker:
 class SvnExporter:
 	'''Export changed files to workspace'''
 	def export(self, fileUrl, ver, toPath):
-		
+		print("export:" + toPath)
 		return
 
 class BuildConfig:
@@ -74,10 +74,15 @@ class HotfixModule:
 
 		filesUrlArr = differ.getChangedFiles(fromUrl, toUrl)
 		print("[%s] diff result:" % self.name)
+
+		print("[%s] start export" % self.name)
+		exporter = SvnExporter()
 		for f in filesUrlArr:
 			print(f)
-			exporter = SvnExporter()
-			exporter.export(f, )
+			print("toUrl:" + self.config.toUrl)
+			path = f.replace(self.config.toUrl, self.config.archivePath)
+			
+			exporter.export(f, self.config.toVer, path)
 
 
 		
