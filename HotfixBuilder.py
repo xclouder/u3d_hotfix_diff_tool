@@ -93,6 +93,19 @@ class HotfixModule:
 		self.relativePath = relativePath
 		self.config = config
 
+	def _geturl(self, diffedUrl, newTargetBaseUrl, moduleRelativePath):
+		index = diffedUrl.find(moduleRelativePath)
+		if (index < 0):
+			return None
+		else:
+			if newTargetBaseUrl.endswith('/'):
+				base = newTargetBaseUrl
+			else:
+				base = newTargetBaseUrl + "/"
+
+			return base + diffedUrl[index:]
+
+
 	def build(self):
 		# start build
 		print("[%s] build..." % self.name)
@@ -104,6 +117,9 @@ class HotfixModule:
 		print("[%s] diff from '%s' to '%s'" % (self.name, fromUrl, toUrl))
 
 		filesUrlArr = differ.getChangedFiles(fromUrl, toUrl)
+		# for f in filesUrlArr:
+
+
 		print("[%s] diff result:" % self.name)
 
 		print("[%s] start export" % self.name)
@@ -125,6 +141,16 @@ def createModule(moduleJson, buildCfg):
 
 
 def main():
+
+	# diffedUrl = "svn://172.16.1.9/ezfun/xgame2/client/trunk/Assets/StreamingAssets/Lua/LuaModule/windowmgr.lua"
+	# reltivePath = "Assets/StreamingAssets/Lua"
+	# newTargetUrl = "svn://172.16.1.9/ezfun/xgame2/client/branchs/20170818/XGame2"
+
+	# m = HotfixModule("Lua", "aa", None)
+	# ret = m._geturl(diffedUrl, newTargetUrl, reltivePath)
+	# print(ret)
+	# return
+
 	with open('config.json') as cfg_file:
 		cfg = json.load(cfg_file)
 
