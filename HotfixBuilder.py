@@ -5,6 +5,7 @@
 # @Last Modified time: 2017-08-26 18:37:08
 import subprocess
 import json
+import os
 
 class SvnDiffWorker:
 	"""Diff difference between versions"""
@@ -35,7 +36,37 @@ class SvnExporter:
 	'''Export changed files to workspace'''
 	def export(self, fileUrl, ver, toPath):
 		print("export:" + toPath)
+		verStr = ""
+		if (ver != None):
+			verStr = "-r" + str(ver)
+
+		exportCmd = "svn export %s -q --force %s %s" % (verStr, fileUrl, toPath)
+		print("execute shell:" + exportCmd)
+		p = subprocess.Popen(exportCmd, stdout=subprocess.PIPE, shell=True)
+		(output, err) = p.communicate()
+
+class Archiver:
+	def archive(self, folder, toFile):
 		return
+
+
+class Reporter:
+	def filesize(fname):
+		return os.path.getsize(fname)
+
+	def md5(fname):
+		hash_md5 = hashlib.md5()
+		with open(fname, "rb") as f:
+			for chunk in iter(lambda: f.read(4096), b""):
+				hash_md5.update(chunk)
+		return hash_md5.hexdigest()
+
+	def report(self, file):
+		print("report:" + file)
+		print("file md5:" + md5(file))
+		print("file size:" + str(filesize(file)))
+
+
 
 class BuildConfig:
 	'''a class represent a build config'''
@@ -83,9 +114,6 @@ class HotfixModule:
 			path = f.replace(self.config.toUrl, self.config.archivePath)
 			
 			exporter.export(f, self.config.toVer, path)
-
-
-		
 
 
 def createModule(moduleJson, buildCfg):
