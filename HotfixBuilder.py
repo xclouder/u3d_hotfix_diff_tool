@@ -2,7 +2,7 @@
 # @Author: xClouder
 # @Date:   2017-08-26 15:13:19
 # @Last Modified by:   xClouder
-# @Last Modified time: 2017-08-26 18:37:08
+# @Last Modified time: 2017-08-28 18:56:53
 import subprocess
 import json
 import os
@@ -105,6 +105,19 @@ class HotfixModule:
 
 			return base + diffedUrl[index:]
 
+	def _getpath(self, exportUrl, moduleRelativePath, archivePath):
+		index = exportUrl.find(moduleRelativePath)
+		if (index < 0):
+			return None
+		else:
+			if archivePath.endswith('/'):
+				base = archivePath
+			else:
+				base = archivePath + "/"
+
+			return base + self.name + "/" + exportUrl[index + len(moduleRelativePath) + 1:]
+
+
 
 	def build(self):
 		# start build
@@ -125,10 +138,13 @@ class HotfixModule:
 		print("[%s] start export" % self.name)
 		exporter = SvnExporter()
 		for f in filesUrlArr:
-			print(f)
-			print("toUrl:" + self.config.toUrl)
-			path = f.replace(self.config.toUrl, self.config.archivePath)
-			
+
+			f = self._geturl(f, self.config.toUrl, self.relativePath)
+			path = self._getpath(f, self.relativePath, self.config.archivePath)
+			parentFolder = os.path.dirname(path)
+
+			if (not os.path.exists(parentFolder)):
+				os.makedirs(parentFolder)
 			exporter.export(f, self.config.toVer, path)
 
 
