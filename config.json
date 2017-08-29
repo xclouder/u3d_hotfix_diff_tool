@@ -1,6 +1,6 @@
 {
-	"from" : "svn://172.16.1.9/ezfun/xgame2/client/trunk",
-	"fromVer" : 234174,
+	"from" : "svn://172.16.1.9/ezfun/xgame2/client/branchs/20170818/XGame2",
+	"fromVer" : 238907,
 	"to" : "svn://172.16.1.9/ezfun/xgame2/client/branchs/20170818/XGame2",
 	"archivePath" : "/Users/xclouder/desktop/Projects/u3d_hotfix_diff_tool/",
 	"modules" :
@@ -12,6 +12,11 @@
 		{
 			"name":"Table",
 			"relativePath":"Assets/StreamingAssets/Table"
+		},
+		{
+			"name":"DLL",
+			"relativePath":"Assets/StreamingAssets/xgame.ezfun"
 		}
+
 	]
 }

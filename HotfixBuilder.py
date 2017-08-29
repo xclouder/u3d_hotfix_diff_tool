@@ -2,7 +2,7 @@
 # @Author: xClouder
 # @Date:   2017-08-26 15:13:19
 # @Last Modified by:   xClouder
-# @Last Modified time: 2017-08-29 10:34:38
+# @Last Modified time: 2017-08-29 19:34:49
 import subprocess
 import json
 import os
@@ -30,7 +30,8 @@ class SvnDiffWorker:
 		(output, err) = p.communicate()
 
 		if (len(output) == 0):
-			raise Exception("diff failed" + output)
+			print("[WARN], diff return empty")
+			return None
 
 		filearr = output.split()
 		return filearr
@@ -132,7 +133,8 @@ class HotfixModule:
 		print("[%s] diff from '%s' to '%s'" % (self.name, fromUrl, toUrl))
 
 		filesUrlArr = differ.getChangedFiles(fromUrl, toUrl)
-		
+		if (filesUrlArr == None):
+			return
 		# print("[%s] diff result:" % self.name)
 
 		print("[%s] start export" % self.name)
@@ -214,9 +216,13 @@ class HotfixBuilder:
 
 		flist = [ os.path.join(buildDir, f) for f in os.listdir(buildDir) if os.path.isfile(os.path.join(buildDir, f)) ]
 
+		print('------------------------------------------------------')
+
 		r = Reporter()
 		for fn in flist:
 			r.report(fn)
+
+		print('------------------------------------------------------')
 
 
 def main():
