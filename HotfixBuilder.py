@@ -2,7 +2,7 @@
 # @Author: xClouder
 # @Date:   2017-08-26 15:13:19
 # @Last Modified by:   xClouder
-# @Last Modified time: 2017-08-29 19:34:49
+# @Last Modified time: 2017-08-29 21:37:06
 import subprocess
 import json
 import os
@@ -30,7 +30,7 @@ class SvnDiffWorker:
 		(output, err) = p.communicate()
 
 		if (len(output) == 0):
-			print("[WARN], diff return empty")
+			print("*WARN*, diff return empty")
 			return None
 
 		filearr = output.split()
@@ -66,9 +66,9 @@ class Reporter:
 		return hash_md5.hexdigest()
 
 	def report(self, file):
-		print("report:" + file)
-		print("file md5:" + self.md5(file))
-		print("file size:" + str(self.filesize(file)))
+		print("REPORT:" + file)
+		print("md5:" + self.md5(file))
+		print("size:" + str(self.filesize(file)))
 
 
 
@@ -192,6 +192,9 @@ class HotfixBuilder:
 		return m
 
 	def build(self):
+
+		os.makedirs(self.config.tempDir)
+		os.makedirs(self.config.buildDir)
 
 		buildCfg = self.config
 
