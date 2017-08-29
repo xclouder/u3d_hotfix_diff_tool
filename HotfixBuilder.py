@@ -2,10 +2,13 @@
 # @Author: xClouder
 # @Date:   2017-08-26 15:13:19
 # @Last Modified by:   xClouder
-# @Last Modified time: 2017-08-28 18:56:53
+# @Last Modified time: 2017-08-29 10:34:38
 import subprocess
 import json
 import os
+import shutil
+import hashlib
+#import zipfile
 
 class SvnDiffWorker:
 	"""Diff difference between versions"""
@@ -35,26 +38,26 @@ class SvnDiffWorker:
 class SvnExporter:
 	'''Export changed files to workspace'''
 	def export(self, fileUrl, ver, toPath):
-		print("export:" + toPath)
+		print("export:" + fileUrl)
 		verStr = ""
 		if (ver != None):
 			verStr = "-r" + str(ver)
 
 		exportCmd = "svn export %s -q --force %s %s" % (verStr, fileUrl, toPath)
-		print("execute shell:" + exportCmd)
+		# print("execute shell:" + exportCmd)
 		p = subprocess.Popen(exportCmd, stdout=subprocess.PIPE, shell=True)
 		(output, err) = p.communicate()
 
 class Archiver:
 	def archive(self, folder, toFile):
-		return
+		shutil.make_archive(toFile, 'zip', folder)
 
 
 class Reporter:
-	def filesize(fname):
+	def filesize(self, fname):
 		return os.path.getsize(fname)
 
-	def md5(fname):
+	def md5(self, fname):
 		hash_md5 = hashlib.md5()
 		with open(fname, "rb") as f:
 			for chunk in iter(lambda: f.read(4096), b""):
@@ -63,8 +66,8 @@ class Reporter:
 
 	def report(self, file):
 		print("report:" + file)
-		print("file md5:" + md5(file))
-		print("file size:" + str(filesize(file)))
+		print("file md5:" + self.md5(file))
+		print("file size:" + str(self.filesize(file)))
 
 
 
@@ -85,6 +88,7 @@ class BuildConfig:
 			self.toVer = None
 
 		self.archivePath = jsonData["archivePath"]
+		self.modules = jsonData["modules"]
 
 class HotfixModule:
 	'''a module to hotfix, like Table, Lua, DLL.ex'''
@@ -115,9 +119,7 @@ class HotfixModule:
 			else:
 				base = archivePath + "/"
 
-			return base + self.name + "/" + exportUrl[index + len(moduleRelativePath) + 1:]
-
-
+			return base + self.config.tempDir + self.name + "/" + exportUrl[index + len(moduleRelativePath) + 1:]
 
 	def build(self):
 		# start build
@@ -130,10 +132,8 @@ class HotfixModule:
 		print("[%s] diff from '%s' to '%s'" % (self.name, fromUrl, toUrl))
 
 		filesUrlArr = differ.getChangedFiles(fromUrl, toUrl)
-		# for f in filesUrlArr:
-
-
-		print("[%s] diff result:" % self.name)
+		
+		# print("[%s] diff result:" % self.name)
 
 		print("[%s] start export" % self.name)
 		exporter = SvnExporter()
@@ -147,40 +147,86 @@ class HotfixModule:
 				os.makedirs(parentFolder)
 			exporter.export(f, self.config.toVer, path)
 
+	def archive(self):
 
-def createModule(moduleJson, buildCfg):
-	name = moduleJson["name"]
-	relativePath = moduleJson["relativePath"]
-	m = HotfixModule(name, relativePath, buildCfg)
+		dirpath = os.path.join(self.config.archivePath, self.config.tempDir)
+		dirpath = os.path.join(dirpath, self.name)
 
-	return m
+		if (not os.path.exists(dirpath)):
+			return
+
+		#start archive
+		print("[%s] archive..." % self.name)
+
+		topath = os.path.join(self.config.archivePath, self.config.buildDir)
+		topath = os.path.join(topath, self.name)
+
+		archiver = Archiver()
+		archiver.archive(dirpath, topath)
+
+		print("archived:" + topath)
+
+
+
+class HotfixBuilder:
+
+	'''Build hotfix zip files and generate meta info'''
+	def __init__(self, configPath):
+		with open(configPath) as cfg_file:
+			cfg = json.load(cfg_file)
+		self.config = BuildConfig(cfg)
+		self.config.tempDir = "temp/"
+		self.config.buildDir = "build/"
+
+		self.tempDir = os.path.join(self.config.archivePath, self.config.tempDir)
+		self.buildDir = os.path.join(self.config.archivePath, self.config.buildDir)
+
+
+	def createModule(self, moduleJson, buildCfg):
+		name = moduleJson["name"]
+		relativePath = moduleJson["relativePath"]
+		m = HotfixModule(name, relativePath, buildCfg)
+
+		return m
+
+	def build(self):
+
+		buildCfg = self.config
+
+		for m in buildCfg.modules:
+			module = self.createModule(m, buildCfg)
+			module.build()
+			module.archive()
+
+	def clean(self):
+		print("clean...")
+
+		path = self.config.archivePath
+
+		if os.path.exists(self.tempDir):
+			shutil.rmtree(self.tempDir)
+
+		if os.path.exists(self.buildDir):
+			shutil.rmtree(self.buildDir)
+
+	def report(self):
+		buildDir = self.config.buildDir
+
+		flist = [ os.path.join(buildDir, f) for f in os.listdir(buildDir) if os.path.isfile(os.path.join(buildDir, f)) ]
+
+		r = Reporter()
+		for fn in flist:
+			r.report(fn)
 
 
 def main():
 
-	# diffedUrl = "svn://172.16.1.9/ezfun/xgame2/client/trunk/Assets/StreamingAssets/Lua/LuaModule/windowmgr.lua"
-	# reltivePath = "Assets/StreamingAssets/Lua"
-	# newTargetUrl = "svn://172.16.1.9/ezfun/xgame2/client/branchs/20170818/XGame2"
+	configPath = 'config.json'
 
-	# m = HotfixModule("Lua", "aa", None)
-	# ret = m._geturl(diffedUrl, newTargetUrl, reltivePath)
-	# print(ret)
-	# return
-
-	with open('config.json') as cfg_file:
-		cfg = json.load(cfg_file)
-
-	buildCfg = BuildConfig(cfg)
-
-	for m in cfg["modules"]:
-		module = createModule(m, buildCfg)
-		module.build()
-
-
-	# dw = SvnDiffWorker()
-	# files = dw.getChangedFiles(oldUrl, newUrl)
-	# for f in files:
-	# 	print(f)
+	builder = HotfixBuilder(configPath)
+	builder.clean()
+	builder.build()
+	builder.report()
 
 if __name__ == '__main__':
 	main()
