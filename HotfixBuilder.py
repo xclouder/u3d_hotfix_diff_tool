@@ -2,7 +2,7 @@
 # @Author: xClouder
 # @Date:   2017-08-26 15:13:19
 # @Last Modified by:   xClouder
-# @Last Modified time: 2017-09-29 18:28:25
+# @Last Modified time: 2017-09-29 18:36:35
 import subprocess
 import json
 import os
@@ -170,7 +170,7 @@ class HotfixModule:
 		dirpath = os.path.join(dirpath, self.name)
 
 		if (not os.path.exists(dirpath)):
-			return
+			return None
 
 		#start archive
 		print("[%s] archive..." % self.name)
@@ -222,7 +222,8 @@ class HotfixBuilder:
 			module.build()
 			arcInfo = module.archive()
 
-			list.append(arcInfo)
+			if (arcInfo is not None):
+				list.append(arcInfo)
 
 		return list
 
