@@ -1,7 +1,8 @@
 {
-	"from" : "svn://172.16.1.9/ezfun/xgame2/client/branchs/20170818/XGame2",
-	"fromVer" : 238907,
-	"to" : "svn://172.16.1.9/ezfun/xgame2/client/branchs/20170818/XGame2",
+	"from" : "svn://172.16.1.9/ezfun/xgame2/client/branchs/openversion_0_1_0",
+	"fromVer" : 252833,
+	"to" : "svn://172.16.1.9/ezfun/xgame2/client/branchs/openversion_0_1_0",
+	"toVer" : 253225,
 	"archivePath" : "/Users/xclouder/desktop/Projects/u3d_hotfix_diff_tool/",
 	"modules" :
 	[

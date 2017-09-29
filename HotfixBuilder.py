@@ -2,12 +2,13 @@
 # @Author: xClouder
 # @Date:   2017-08-26 15:13:19
 # @Last Modified by:   xClouder
-# @Last Modified time: 2017-08-29 21:37:06
+# @Last Modified time: 2017-09-29 18:28:25
 import subprocess
 import json
 import os
 import shutil
 import hashlib
+import json
 #import zipfile
 
 class SvnDiffWorker:
@@ -52,23 +53,37 @@ class SvnExporter:
 class Archiver:
 	def archive(self, folder, toFile):
 		shutil.make_archive(toFile, 'zip', folder)
-
+		return toFile + ".zip"
 
 class Reporter:
+	def __init__(self):
+		self.list = []
+
 	def filesize(self, fname):
 		return os.path.getsize(fname)
 
 	def md5(self, fname):
+
 		hash_md5 = hashlib.md5()
 		with open(fname, "rb") as f:
 			for chunk in iter(lambda: f.read(4096), b""):
 				hash_md5.update(chunk)
 		return hash_md5.hexdigest()
 
-	def report(self, file):
-		print("REPORT:" + file)
-		print("md5:" + self.md5(file))
-		print("size:" + str(self.filesize(file)))
+	def addfile(self, file, type):
+		f = file
+		info = {
+			"type": type,
+			"size": self.filesize(f),
+			"md5": self.md5(f)
+		}
+
+		self.list.append(info)
+
+	def report(self):
+		# write to json
+		print(json.dumps(self.list, sort_keys=True, indent=4, separators=(',', ': ')))
+
 
 
 
@@ -164,11 +179,14 @@ class HotfixModule:
 		topath = os.path.join(topath, self.name)
 
 		archiver = Archiver()
-		archiver.archive(dirpath, topath)
+		archivePath = archiver.archive(dirpath, topath)
 
 		print("archived:" + topath)
 
-
+		return {
+			"filepath" : archivePath,
+			"type" : self.name
+		}
 
 class HotfixBuilder:
 
@@ -198,10 +216,16 @@ class HotfixBuilder:
 
 		buildCfg = self.config
 
+		list = []
 		for m in buildCfg.modules:
 			module = self.createModule(m, buildCfg)
 			module.build()
-			module.archive()
+			arcInfo = module.archive()
+
+			list.append(arcInfo)
+
+		return list
+
 
 	def clean(self):
 		print("clean...")
@@ -214,17 +238,18 @@ class HotfixBuilder:
 		if os.path.exists(self.buildDir):
 			shutil.rmtree(self.buildDir)
 
-	def report(self):
+	def report(self, arcInfoList):
 		buildDir = self.config.buildDir
 
-		flist = [ os.path.join(buildDir, f) for f in os.listdir(buildDir) if os.path.isfile(os.path.join(buildDir, f)) ]
+		#flist = [ os.path.join(buildDir, f) for f in os.listdir(buildDir) if os.path.isfile(os.path.join(buildDir, f)) ]
 
 		print('------------------------------------------------------')
 
 		r = Reporter()
-		for fn in flist:
-			r.report(fn)
+		for info in arcInfoList:
+			r.addfile(info["filepath"], info["type"])
 
+		r.report()
 		print('------------------------------------------------------')
 
 
@@ -234,8 +259,8 @@ def main():
 
 	builder = HotfixBuilder(configPath)
 	builder.clean()
-	builder.build()
-	builder.report()
+	list = builder.build()
+	builder.report(list)
 
 if __name__ == '__main__':
 	main()
