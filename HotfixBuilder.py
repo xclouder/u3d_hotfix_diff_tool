@@ -2,10 +2,11 @@
 # @Author: xClouder
 # @Date:   2017-08-26 15:13:19
 # @Last Modified by:   xClouder
-# @Last Modified time: 2017-09-29 18:36:35
+# @Last Modified time: 2017-09-30 18:13:33
 import subprocess
 import json
 import os
+import zipfile
 import shutil
 import hashlib
 import json
@@ -52,8 +53,22 @@ class SvnExporter:
 
 class Archiver:
 	def archive(self, folder, toFile):
-		shutil.make_archive(toFile, 'zip', folder)
-		return toFile + ".zip"
+
+		#make_archive把文件夹信息忽略了
+		#shutil.make_archive(toFile, 'zip', folder)
+		file = toFile + ".zip"
+		source = folder
+		ziph = zipfile.ZipFile(file, 'w', zipfile.ZIP_DEFLATED)
+	    # ziph is zipfile handle
+		for root, dirs, files in os.walk(source):
+			ziph.write(root, os.path.relpath(root, os.path.join(source, '.')))
+			for f in files:
+				ziph.write(os.path.join(root, f), os.path.relpath(os.path.join(root, f), os.path.join(source, '.')))
+
+
+		ziph.close()
+
+		return file
 
 class Reporter:
 	def __init__(self):
